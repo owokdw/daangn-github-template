@@ -1,0 +1,12 @@
+{
+  "name": "Go Coverage Scaner on pr",
+  "description": "Run gocov and report to your pr",
+  "iconName": "umbrella",
+  "categories": [
+    "Go",
+    "Coverage"
+  ],
+  "filePatterns": [
+    ".*\\.go$"
+  ]
+}

@@ -1,0 +1,52 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Coverage Check
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the main branch
+on:
+  pull_request:
+    branches: [ $default-branch ]
+    paths:
+      - "**.go"
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  gocov:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-go@v2.1.1
+        with:
+          go-version: ^1.14
+
+      - name: setup docker compose
+        run: [ -f docker-compose.yml ] && docker-compose up -d
+
+      - name: gocov-xml
+        env:
+          GOPRIVATE: github.com/daangn
+          AWS_ACCESS_KEY_ID: wowawesomekey
+          AWS_SECRET_ACCESS_KEY: wowawesomesecret
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.ORG_GITHUB_READ_TOKEN }}@github.com/daangn".insteadOf "https://github.com/daangn"
+          GO111MODULE=off go get github.com/axw/gocov/...
+          GO111MODULE=off go get github.com/AlekSi/gocov-xml
+          go mod download
+          gocov test ./... | gocov-xml > coverage.xml
+
+      - name: report
+        uses: 5monkeys/cobertura-action@v5
+        with:
+          path: coverage.xml
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          minimum_coverage: 70
+          skip_covered: false
+          only_changed_files: false
+
+      - name: cleanup docker compose
+        run: [ -f docker-compose.yml ] && docker-compose down
