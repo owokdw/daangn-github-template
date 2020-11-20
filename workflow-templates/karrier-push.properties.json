@@ -1,6 +1,6 @@
 {
   "name": "Karrier push protobuf",
-  "description": "push protobuf file using karrier",
+  "description": "Push protobuf file using karrier",
   "iconName": "karrier-push",
   "categories": [
     "CI",
