@@ -1,7 +1,7 @@
 {
   "name": "Go Coverage Scaner on pr",
   "description": "Run gocov and report to your pr",
-  "iconName": "umbrella",
+  "iconName": "go-coverage",
   "categories": [
     "Go",
     "Coverage"
