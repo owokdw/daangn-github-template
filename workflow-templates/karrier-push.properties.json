@@ -1,0 +1,12 @@
+{
+  "name": "Karrier push protobuf",
+  "description": "push protobuf file using karrier",
+  "iconName": "karrier-push",
+  "categories": [
+    "CI",
+    "ProtoBuffer"
+  ],
+  "filePatterns": [
+    ".*\\.proto$"
+  ]
+}
