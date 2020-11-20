@@ -1,0 +1,30 @@
+name: Karrier push protobuf
+
+on:
+  push:
+    branches:
+      - $default-branch
+    paths:
+      - "**.proto"
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: "1.14"
+      - name: Install karrier
+        env:
+          GO111MODULE: on
+          GOPRIVATE: github.com/daangn
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.ORG_GITHUB_READ_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          go get github.com/daangn/karrier/cmd/karrier
+      - name: Push .proto files
+        env:
+          GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_READ_TOKEN }}
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          karrier push
