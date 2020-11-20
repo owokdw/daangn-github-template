@@ -24,8 +24,9 @@ jobs:
         with:
           go-version: ^1.14
 
-      - name: setup docker compose
-        run: [ -f docker-compose.yml ] && docker-compose up -d
+      - uses: isbang/compose-action@v0.1.1
+        with:
+          compose-file: './docker-compose.yml'
 
       - name: gocov-xml
         env:
@@ -47,6 +48,3 @@ jobs:
           minimum_coverage: 70
           skip_covered: false
           only_changed_files: false
-
-      - name: cleanup docker compose
-        run: [ -f docker-compose.yml ] && docker-compose down
