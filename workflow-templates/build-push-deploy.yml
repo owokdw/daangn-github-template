@@ -7,11 +7,11 @@ env:
   PROJECT: keyword
 
   DOCKERFILE_PATH: .
-  DOCKERBUILD_OPTS: # something like --build-args GITHUB_TOKEN=asdf
+  DOCKERBUILD_OPTS: # something like --build-arg GITHUB_TOKEN=${{ secrets.ORG_GITHUB_READ_TOKEN }}
   AWS_ECR_REPO: keyword
   AWS_REGION: ap-northeast-2
   AWS_ACCESS_KEY_ID: ${{ secrets.ORG_AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${ secrets.ORG_AWS_SECRET_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.ORG_AWS_SECRET_ACCESS_KEY }}
 
   K8S_IMAGE_NAME: keyword
   K8S_REPO_BRANCH: release/alpha
@@ -20,11 +20,11 @@ env:
 on:
   push:
     tags:
-      - v[0-9]+.[0-9]+.[0-9]+
-#      - v[0-9]+.[0-9]+.[0-9]+-alpha.*
-#    branches:
-#      - release/prod
-#      - release/alpha
+      - v*.*.*
+#       - v*.*.*-alpha.*
+#     branches:
+#       - release/prod
+#       - release/alpha
 
 jobs:
   build-and-push:
@@ -36,16 +36,16 @@ jobs:
         env:
           REF: ${{ github.ref }}
         run: |
-          [[ $REF == ref/tags/* ]] && \
-          echo "::set-output name=version::${REF#"ref/tags/"}" || \
-          echo "::set-output name=version::${REF#"ref/heads/"}"
+          [[ $REF == refs/tags/* ]] && \
+          echo "::set-output name=version::${REF#"refs/tags/"}" || \
+          echo "::set-output name=version::${REF#"refs/heads/"}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${AWS_ACCESS_KEY_ID}
-          aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
-          aws-region: ${AWS_REGION}
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -64,7 +64,7 @@ jobs:
         with:
           repository: daangn/hoian-eks
           token: ${{ secrets.ORG_DEPLOY_TOKEN }}
-          ref: $K8S_REPO_BRANCH
+          ref: ${{ env.K8S_REPO_BRANCH }}
 
       - name: Setup Kustomization
         run: |
@@ -124,7 +124,8 @@ jobs:
               head: '${{ steps.set-branch-name.outputs.branch }}',
             })
 
-            const { number } = data
+            const { number, html_url } = data
+            console.log("pr created", html_url)
 
             await github.issues.addLabels({
               owner: 'daangn',
