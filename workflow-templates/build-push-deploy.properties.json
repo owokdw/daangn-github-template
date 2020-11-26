@@ -1,0 +1,11 @@
+{
+  "name": "Build Push Deploy",
+  "description": "Build, Push, and Deploy your dockerfile",
+  "iconName": "build-push-deploy",
+  "categories": [
+    "Dockerfile"
+  ],
+  "filePatterns": [
+    "^Dockerfile"
+  ]
+}

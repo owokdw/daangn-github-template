@@ -1,0 +1,134 @@
+name: Build Docker, Push ECR, and Deploy hoian-eks
+
+# you should update env vars
+env:
+  STAGE: alpha
+  COUNTRY: kr
+  PROJECT: keyword
+
+  DOCKERFILE_PATH: .
+  DOCKERBUILD_OPTS: # something like --build-args GITHUB_TOKEN=asdf
+  AWS_ECR_REPO: keyword
+  AWS_REGION: ap-northeast-2
+  AWS_ACCESS_KEY_ID: ${{ secrets.ORG_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${ secrets.ORG_AWS_SECRET_ACCESS_KEY }}
+
+  K8S_IMAGE_NAME: keyword
+  K8S_REPO_BRANCH: release/alpha
+  K8S_PROJECT_PATH: alpha/ap-northeast-2/keyword
+
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+#      - v[0-9]+.[0-9]+.[0-9]+-alpha.*
+#    branches:
+#      - release/prod
+#      - release/alpha
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Version
+        id: get-version
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          [[ $REF == ref/tags/* ]] && \
+          echo "::set-output name=version::${REF#"ref/tags/"}" || \
+          echo "::set-output name=version::${REF#"ref/heads/"}"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${AWS_ACCESS_KEY_ID}
+          aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+          aws-region: ${AWS_REGION}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.get-version.outputs.version }}
+        run: |
+          docker build --pull $DOCKERBUILD_OPTS -t $ECR_REGISTRY/$AWS_ECR_REPO:$IMAGE_TAG $DOCKERFILE_PATH
+          docker push $ECR_REGISTRY/$AWS_ECR_REPO:$IMAGE_TAG
+
+      - uses: actions/checkout@v2
+        name: Checkout hoian-eks
+        with:
+          repository: daangn/hoian-eks
+          token: ${{ secrets.ORG_DEPLOY_TOKEN }}
+          ref: $K8S_REPO_BRANCH
+
+      - name: Setup Kustomization
+        run: |
+          curl -s "https://raw.githubusercontent.com/\
+          kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+
+      - name: Get Actor Email
+        id: get-email
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.ORG_DEPLOY_TOKEN }}
+          result-encoding: string
+          script: |
+            const { data } = await github.users.getByUsername({
+              username: context.actor,
+            })
+            return data.email
+
+      - name: Set Branch Name
+        id: set-branch-name
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
+        run: echo "::set-output name=branch::feat/$PROJECT/$VERSION"
+
+      - name: Apply New Version
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
+          ACTOR_NAME: ${{ github.actor }}
+          ACTOR_EMAIL: ${{ steps.get-email.outputs.result }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          BRANCH: ${{ steps.set-branch-name.outputs.branch }}
+        run: |
+          git switch -c "$BRANCH"
+          git config user.name "$ACTOR_NAME"
+          git config user.email "$ACTOR_EMAIL"
+          cd $K8S_PROJECT_PATH
+          kustomize edit set image $K8S_IMAGE_NAME=$ECR_REGISTRY/$AWS_ECR_REPO:$VERSION
+          git add .
+          git commit -m "feat($STAGE/$COUNTRY/$PROJECT): update $PROJECT version $VERSION"
+          git push origin "$BRANCH"
+
+      - name: Create Pull Request
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.ORG_DEPLOY_TOKEN }}
+          script: |
+            const stage = process.env.STAGE
+            const country = process.env.COUNTRY
+            const project = process.env.PROJECT
+            const base = process.env.K8S_REPO_BRANCH
+
+            const { data } = await github.pulls.create({
+              owner: 'daangn',
+              repo: 'hoian-eks',
+              title: `feat(${stage}/${country}/${project}): update ${project} version ${{ steps.get-version.outputs.version }}`,
+              base: base,
+              head: '${{ steps.set-branch-name.outputs.branch }}',
+            })
+
+            const { number } = data
+
+            await github.issues.addLabels({
+              owner: 'daangn',
+              repo: 'hoian-eks',
+              issue_number: number,
+              labels: ['bot/deploy'],
+            })
