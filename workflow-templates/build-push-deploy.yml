@@ -59,13 +59,6 @@ jobs:
           docker build --pull $DOCKERBUILD_OPTS -t $ECR_REGISTRY/$AWS_ECR_REPO:$IMAGE_TAG $DOCKERFILE_PATH
           docker push $ECR_REGISTRY/$AWS_ECR_REPO:$IMAGE_TAG
 
-      - uses: actions/checkout@v2
-        name: Checkout hoian-eks
-        with:
-          repository: daangn/hoian-eks
-          token: ${{ secrets.ORG_DEPLOY_TOKEN }}
-          ref: ${{ env.K8S_REPO_BRANCH }}
-
       - name: Setup Kustomization
         run: |
           curl -s "https://raw.githubusercontent.com/\
@@ -83,11 +76,12 @@ jobs:
             })
             return data.email
 
-      - name: Set Branch Name
-        id: set-branch-name
-        env:
-          VERSION: ${{ steps.get-version.outputs.version }}
-        run: echo "::set-output name=branch::ci/$PROJECT/$VERSION"
+      - uses: actions/checkout@v2
+        name: Checkout hoian-eks
+        with:
+          repository: daangn/hoian-eks
+          token: ${{ secrets.ORG_DEPLOY_TOKEN }}
+          ref: ${{ env.K8S_REPO_BRANCH }}
 
       - name: Apply New Version
         env:
@@ -95,41 +89,11 @@ jobs:
           ACTOR_NAME: ${{ github.actor }}
           ACTOR_EMAIL: ${{ steps.get-email.outputs.result }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          BRANCH: ${{ steps.set-branch-name.outputs.branch }}
         run: |
-          git switch -c "$BRANCH"
           git config user.name "$ACTOR_NAME"
           git config user.email "$ACTOR_EMAIL"
           cd $K8S_PROJECT_PATH
           kustomize edit set image $K8S_IMAGE_NAME=$ECR_REGISTRY/$AWS_ECR_REPO:$VERSION
           git add .
           git commit -m "ci($STAGE/$COUNTRY/$PROJECT): update version $VERSION"
-          git push origin "$BRANCH"
-
-      - name: Create Pull Request
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{ secrets.ORG_DEPLOY_TOKEN }}
-          script: |
-            const stage = process.env.STAGE
-            const country = process.env.COUNTRY
-            const project = process.env.PROJECT
-            const base = process.env.K8S_REPO_BRANCH
-
-            const { data } = await github.pulls.create({
-              owner: 'daangn',
-              repo: 'hoian-eks',
-              title: `ci(${stage}/${country}/${project}): update version ${{ steps.get-version.outputs.version }}`,
-              base: base,
-              head: '${{ steps.set-branch-name.outputs.branch }}',
-            })
-
-            const { number, html_url } = data
-            console.log("pr created", html_url)
-
-            await github.issues.addLabels({
-              owner: 'daangn',
-              repo: 'hoian-eks',
-              issue_number: number,
-              labels: ['bot/deploy'],
-            })
+          git pull origin $K8S_REPO_BRANCH && git push origin $K8S_REPO_BRANCH
