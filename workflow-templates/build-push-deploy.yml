@@ -19,7 +19,7 @@ env:
 
 on:
   push:
-    tags:
+    tags: # choose one
       - v*.*.*
 #       - v*.*.*-alpha.*
 #     branches:
@@ -87,7 +87,7 @@ jobs:
         id: set-branch-name
         env:
           VERSION: ${{ steps.get-version.outputs.version }}
-        run: echo "::set-output name=branch::feat/$PROJECT/$VERSION"
+        run: echo "::set-output name=branch::ci/$PROJECT/$VERSION"
 
       - name: Apply New Version
         env:
@@ -103,7 +103,7 @@ jobs:
           cd $K8S_PROJECT_PATH
           kustomize edit set image $K8S_IMAGE_NAME=$ECR_REGISTRY/$AWS_ECR_REPO:$VERSION
           git add .
-          git commit -m "feat($STAGE/$COUNTRY/$PROJECT): update $PROJECT version $VERSION"
+          git commit -m "ci($STAGE/$COUNTRY/$PROJECT): update version $VERSION"
           git push origin "$BRANCH"
 
       - name: Create Pull Request
@@ -119,7 +119,7 @@ jobs:
             const { data } = await github.pulls.create({
               owner: 'daangn',
               repo: 'hoian-eks',
-              title: `feat(${stage}/${country}/${project}): update ${project} version ${{ steps.get-version.outputs.version }}`,
+              title: `ci(${stage}/${country}/${project}): update version ${{ steps.get-version.outputs.version }}`,
               base: base,
               head: '${{ steps.set-branch-name.outputs.branch }}',
             })
