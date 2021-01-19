@@ -40,10 +40,11 @@ jobs:
         id: get-version
         env:
           REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
         run: |
           [[ $REF == refs/tags/* ]] && \
           echo "::set-output name=version::${REF#"refs/tags/"}" || \
-          echo "::set-output name=version::${REF#"refs/heads/"}"
+          echo "::set-output name=version::${SHA}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
