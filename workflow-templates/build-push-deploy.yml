@@ -16,7 +16,7 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.ORG_AWS_SECRET_ACCESS_KEY }}
   # karrot-alpha 계정에 배포할 경우
 #   AWS_ACCESS_KEY_ID: ${{ secrets.ORG_AWS_ACCESS_KEY_ID_ALPHA }}
-#   AWS_ACCESS_KEY_ID: ${{ secrets.ORG_AWS_SECRET_ACCESS_KEY_ALPHA }}
+#   AWS_SECRET_ACCESS_KEY: ${{ secrets.ORG_AWS_SECRET_ACCESS_KEY_ALPHA }}
 
   K8S_IMAGE_NAME: keyword # kustomize.yml 에 정의한 image name
   K8S_REPO_BRANCH: release/alpha # hoian-eks 브랜치 이름
