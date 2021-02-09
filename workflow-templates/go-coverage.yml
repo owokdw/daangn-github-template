@@ -24,6 +24,12 @@ jobs:
         with:
           go-version: ^1.14
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.ORG_DOCKER_HUB_PASSWORD }}
+
       - uses: isbang/compose-action@v0.1.1
         with:
           compose-file: './docker-compose.yml'
