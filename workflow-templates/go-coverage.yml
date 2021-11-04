@@ -30,7 +30,7 @@ jobs:
           username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
           password: ${{ secrets.ORG_DOCKER_HUB_PASSWORD }}
 
-      - uses: isbang/compose-action@v0.1.1
+      - uses: isbang/compose-action@v1.0.0
         with:
           compose-file: './docker-compose.yml'
 
