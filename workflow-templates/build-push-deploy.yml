@@ -108,4 +108,4 @@ jobs:
           kustomize edit set image $K8S_IMAGE_NAME=$ECR_REGISTRY/$AWS_ECR_REPO:$VERSION
           git add .
           git commit -m "ci($STAGE/$COUNTRY/$PROJECT): update version $VERSION"
-          git pull origin $K8S_REPO_BRANCH && git push origin $K8S_REPO_BRANCH
+          git pull --rebase origin $K8S_REPO_BRANCH && git push origin $K8S_REPO_BRANCH
