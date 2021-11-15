@@ -1,0 +1,63 @@
+name: Go Module Update PR Generator
+
+on:
+  push:
+    paths:
+      - "**.go"
+      - "**/go.sum"
+      - "**/go.mod"
+    branches: [ $default-branch ]
+
+env:
+  TARGET_REPOSITORY: daangn/.github   # 타겟으로 하는 레포지토리 daangn/something-SUPER-FANCY-GO-REPOSITORY
+  TARGET_BRANCH: main                 # 타겟으로 하는 브랜치
+  GOPRIVATE_VALUE: github.com/daangn  # GOPRIVATE environment value
+  GO_VERSION: 1.15                    # Go 버전
+  DEPLOY_TOKEN: ${{ secrets.ORG_DEPLOY_TOKEN }} # pull request를 deploy하는 토큰이예요!
+
+jobs:
+  pull_request_to_target:
+    runs-on: [ self-hosted, linux, x64 ]
+
+    steps:
+      - name: checkout target repository
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.TARGET_REPOSITORY }}
+          ref: master
+          token: ${{ env.DEPLOY_TOKEN }}
+      - name: go setup
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: create pull request
+        env:
+          GOPRIVATE: ${{ env.GOPRIVATE_VALUE }}
+        run: |
+          echo "setup git"
+          git config --gloabl user.name ${{ github.event.pusher.name }}
+          git config --global user.email ${{ github.event.pusher.email }}
+          git config --global url."https://x-access-token:${{ env.DEPLOY_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+          echo "checkout new branch"
+          git checkout -b package/${{ github.repository }}/${{ github.sha }}
+
+          echo "updating package"
+          go get github.com/${{ github.repository }}@{{ github.sha }}
+          git add go.mod go.sum
+          git commit --message "chore(module) : update ${{ github.repository }}@${{ github.sha }}
+          git push origin package/${{ github.repository }}/${{ github.sha }}
+
+          echo "creating pull request"
+          curl \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ env.DEPLOY_TOKEN }}" \
+            https://api.github.com/repos/${{ env.TARGET_REPOSITORY }}/pulls \
+            -d '{
+              "head":"package/${{ github.repository }}/${{ github.sha }}",
+              "base":${{ env.TARGET_BRANCH }}
+              "title":"[MODULE UPDATE] ${{ github.repository }}",
+              "body":"# Update Required\n - ${{ github.repository }} got updated to ${{ github.sha }}"
+            }'

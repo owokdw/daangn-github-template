@@ -1,0 +1,13 @@
+{
+  "name": "Go Module Update PR Generator",
+  "description": "Create PR at target repository when source module got updated",
+  "author": "carter@daangn.com",
+  "iconName": "go-module-update-pr",
+  "categories":[
+    "Go",
+    "Go Module"
+  ],
+  "filePatterns": [
+    "^.go"
+  ]
+}
