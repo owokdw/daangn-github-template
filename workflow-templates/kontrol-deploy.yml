@@ -1,0 +1,20 @@
+name: kontrol-deploy
+
+on:
+  push:
+    branches: [$default-branch]
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, x64]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: "daangn/kontrol-deploy-action"
+          ref: v1
+          token: ${{ secrets.ORG_GITHUB_READ_TOKEN }}
+      - uses: ./
+        with:
+          project: ${{ github.repository }}
+          token: ${{ secrets.ORG_GITHUB_READ_TOKEN }}

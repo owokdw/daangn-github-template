@@ -1,0 +1,15 @@
+{
+    "name": "Deploy By Kontrol",
+    "description": "Use action to deploy",
+    "author": [
+        "carter@daangn.com"
+    ],
+    "iconName": "kontrol-deploy",
+    "categories": [
+        "Kontrol",
+        "Deploy"
+    ],
+    "filePatterns": [
+        ".deploy/values.yaml"
+    ]
+}
