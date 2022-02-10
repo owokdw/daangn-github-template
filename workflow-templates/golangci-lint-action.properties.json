@@ -1,0 +1,14 @@
+{
+    "name": "Go Lint by golangci-lint",
+    "description": "Advanced Linter by golangci-lint",
+    "author": ["carter@daangn.com","lani@daangn.com"],
+    "iconName": "golangci-lint-action",
+    "categories":[
+      "Go",
+      "Go Module"
+    ],
+    "filePatterns": [
+      "^.go",
+      ".golangci.yml"
+    ]
+  }

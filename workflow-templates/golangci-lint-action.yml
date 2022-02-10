@@ -1,0 +1,44 @@
+name: golangci-lint
+
+on:
+  push:
+    branches: [ $default-branch ]
+    paths:
+      - "**.go"
+
+  pull_request:
+    branches: [ $default-branch ]
+    paths:
+      - "**.go"
+
+env:
+  CONFIG_PATH: .golangci.yml
+  GO_VERSION: 1.17
+  DEFAULT_CONFIG_URL: https://raw.githubusercontent.com/daangn/lint-config/main/golangci-lint/default.golangci.yml 
+
+jobs:
+  lint:
+    runs-on: [ self-hosted, linux, x64 ]
+
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v2
+
+      - name: Search .golangci.yml
+        run: |
+          if [ ! -f ${{ env.CONFIG_PATH }} ]; then 
+            echo "missing config"
+            wget -O ${{ env.CONFIG_PATH }} ${{ DEFAULT_CONFIG_URL }}
+          fi
+      
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version : ${{ env.GO_VERSION }}
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.43.0
+          skip-go-installation: true
+          args: --config ${{ env.CONFIG_PATH }}    
