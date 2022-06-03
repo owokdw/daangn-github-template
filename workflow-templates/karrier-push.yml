@@ -16,17 +16,17 @@ jobs:
   push:
     runs-on: [ self-hosted, linux, x64 ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
-          go-version: ^1.16
+          go-version: 1.18
       - name: Install karrier
         env:
           GO111MODULE: on
           GOPRIVATE: github.com/daangn
         run: |
           git config --global url."https://x-access-token:${{ secrets.ORG_GITHUB_READ_TOKEN }}@github.com/".insteadOf "https://github.com/"
-          go get github.com/daangn/karrier/cmd/karrier
+          go install github.com/daangn/karrier/cmd/karrier@latest
       - if: ${{ github.event_name == 'push' }}
         name: Push .proto files
         env:
