@@ -35,7 +35,7 @@ jobs:
   build-and-push:
     runs-on: [ self-hosted, linux, x64 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Version
         id: get-version
         env:
@@ -89,7 +89,7 @@ jobs:
             })
             return data.email
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         name: Checkout hoian-eks
         with:
           repository: daangn/hoian-eks
