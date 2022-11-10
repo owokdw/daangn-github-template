@@ -9,12 +9,7 @@ jobs:
     runs-on: [self-hosted, linux, x64]
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          repository: "daangn/kontrol-deploy-action"
-          ref: v1
-          token: ${{ secrets.ORG_GITHUB_READ_TOKEN }}
-      - uses: ./
+      - uses: daangn/kontrol-deploy-action@v1
         with:
           project: ${{ github.repository }}
           token: ${{ secrets.ORG_GITHUB_READ_TOKEN }}
