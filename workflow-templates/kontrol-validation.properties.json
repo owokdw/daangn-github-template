@@ -1,0 +1,15 @@
+{
+    "name": "Validate kontrol deploy manifest",
+    "description": "Use action to validate kontrol deploy manifest",
+    "author": [
+        "owen@daangn.com"
+    ],
+    "iconName": "kontrol-validation",
+    "categories": [
+        "Kontrol",
+        "Validate"
+    ],
+    "filePatterns": [
+        ".deploy/values.yaml"
+    ]
+}

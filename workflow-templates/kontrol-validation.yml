@@ -1,0 +1,13 @@
+name: kontrol-validate
+
+on: [push]
+
+jobs:
+  validate:
+    runs-on: [self-hosted, linux, x64]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: daangn/kontrol-validation-action@v1
+        with:
+          manifest_path: .deploy/values.yaml
